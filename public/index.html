@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MBTI Burmese Test</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 600px; margin: 40px auto; padding: 20px; background: #f4f4f9; }
+        .question-card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .options { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.8em; color: #666; }
+        select { width: 100%; padding: 10px; margin-top: 10px; border-radius: 4px; border: 1px solid #ddd; }
+        button { background: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; width: 100%; font-size: 1.1em; }
+        button:hover { background: #0056b3; }
+        #result { margin-top: 30px; padding: 20px; background: #e7f3ff; border-radius: 8px; display: none; }
+        h2 { color: #333; }
+    </style>
+</head>
+<body>
+
+    <h2>MBTI Personality Test (Burmese)</h2>
+    <div id="quiz-container"></div>
+    <button onclick="handleCalculate()">Calculate Result</button>
+
+    <div id="result">
+        <h3>Your Result: <span id="mbti-string"></span></h3>
+        <pre id="mbti-details"></pre>
+    </div>
+
+<script>
+// 1. Data Source
+const questions = [
+    { "id": 1, "question_type": "E/I", "direction": "E", "question": "လူမှုရေးပွဲလမ်းသဘင်တွေမှာ လူအများနဲ့ စကားပြောရတာကို သင် စွမ်းအင်တက်ကြွစေသလား?" },
+    { "id": 2, "question_type": "E/I", "direction": "I", "question": "တစ်ယောက်တည်း အေးအေးဆေးဆေးနေရတဲ့အချိန်က သင့်အတွက် အားအင်ပြန်ပြည့်စေတယ်လို့ ခံစားရသလား?" },
+    { "id": 3, "question_type": "E/I", "direction": "E", "question": "စကားမပြောခင် စဉ်းစားနေတာထက် စကားပြောရင်းနဲ့မှ အတွေးအမြင်သစ်တွေ ထွက်လာတတ်သလား?" },
+    { "id": 4, "question_type": "E/I", "direction": "I", "question": "လူအုပ်ကြီးထဲမှာရှိနေတာထက် လူနည်းစု (သို့) သူငယ်ချင်းအရင်းအချာတွေနဲ့ပဲ အချိန်ကုန်ဆုံးရတာကို ပိုနှစ်သက်သလား?" },
+    { "id": 5, "question_type": "S/N", "direction": "S", "question": "စိတ်ကူးယဉ်ဆန်တဲ့ အရာတွေထက် လက်တွေ့ကျပြီး အသုံးချလို့ရတဲ့ အချက်အလက်တွေကို ပိုအာရုံစိုက်သလား?" },
+    { "id": 6, "question_type": "S/N", "direction": "N", "question": "လက်ရှိဖြစ်ပျက်နေတာတွေထက် နောင်အနာဂတ်မှာ ဖြစ်လာနိုင်ခြေရှိတဲ့ အခွင့်အလမ်းတွေကို ပိုတွေးတောတတ်သလား?" },
+    { "id": 7, "question_type": "S/N", "direction": "S", "question": "အလုပ်တစ်ခုလုပ်တဲ့အခါ အသေးစိတ်အချက်အလက်တွေကို သေချာဂရုစိုက်ပြီး လုပ်ဆောင်တတ်သူလား?" },
+    { "id": 8, "question_type": "S/N", "direction": "N", "question": "စာကြောင်းတွေကြားက ပဟေဠိဆန်တဲ့ အဓိပ္ပာယ်တွေနဲ့ သီအိုရီတွေကို ရှာဖွေရတာကို စိတ်ဝင်စားသလား?" },
+    { "id": 9, "question_type": "T/F", "direction": "T", "question": "ဆုံးဖြတ်ချက်ချတဲ့အခါ ခံစားချက်ထက် ကျိုးကြောင်းဆင်ခြင်မှုနဲ့ အချက်အလက်တွေကို ပိုဦးစားပေးသလား?" },
+    { "id": 10, "question_type": "T/F", "direction": "F", "question": "ပြဿနာတစ်ခုကို ဖြေရှင်းတဲ့အခါ သက်ဆိုင်သူတွေရဲ့ ခံစားချက်နဲ့ စိတ်ကျေနပ်မှုကို အဓိကထားသလား?" },
+    { "id": 11, "question_type": "T/F", "direction": "T", "question": "တစ်စုံတစ်ယောက်ကို ဝေဖန်အကြံပေးတဲ့အခါ အားနာတာထက် အမှန်တရားကို ပွင့်ပွင့်လင်းလင်း ပြောဆိုတတ်သလား?" },
+    { "id": 12, "question_type": "T/F", "direction": "F", "question": "လူမှုအဖွဲ့အစည်းအတွင်း သဟဇာတဖြစ်ဖို့နဲ့ အချင်းချင်း နားလည်မှုရှိဖို့က အမှန်တရားထက် ပိုအရေးကြီးတယ်လို့ ထင်သလား?" },
+    { "id": 13, "question_type": "J/P", "direction": "J", "question": "အလုပ်တစ်ခုကို မစတင်ခင် အစီအစဉ် (Plan) သေချာဆွဲပြီး အချိန်ဇယားအတိုင်း လုပ်ဆောင်ရတာကို နှစ်သက်သလား?" },
+    { "id": 14, "question_type": "J/P", "direction": "P", "question": "တင်းကျပ်တဲ့ အစီအစဉ်တွေထက် အခြေအနေပေါ်မူတည်ပြီး လိုက်လျောညီထွေ ပြောင်းလဲလုပ်ဆောင်ရတာကို ပိုကြိုက်သလား?" },
+    { "id": 15, "question_type": "J/P", "direction": "J", "question": "သင့်ရဲ့ နေ့စဉ်ဘဝနဲ့ ပတ်ဝန်းကျင်ကို အမြဲတမ်း စနစ်တကျနဲ့ သပ်သပ်ရပ်ရပ် ရှိနေစေချင်သလား?" },
+    { "id": 16, "question_type": "J/P", "direction": "P", "question": "အလုပ်တစ်ခုကို အစောကြီး အပြီးသတ်ထားတာထက် နောက်ဆုံးမိနစ် (Deadline) နားနီးမှ အာရုံစိုက်ပြီး လုပ်ဆောင်တတ်သလား?" }
+];
+
+// 2. Logic Functions
+function sigmoid(x) { return 1 / (1 + Math.exp(-x)); }
+function normalizeConfidence(confidence) { return sigmoid(confidence - 3); }
+
+function calculateMBTI(answers) {
+    const dichotomies = ["E/I", "S/N", "T/F", "J/P"];
+    const result = { MBTI_Scores: {}, MBTI_String: "" };
+
+    for (let pair of dichotomies) {
+        const [left, right] = pair.split("/");
+        const typeAnswers = answers.filter(a => a.question_type === pair);
+        if (typeAnswers.length === 0) continue;
+
+        let totalWeight = 0;
+        for (let answer of typeAnswers) {
+            let weight = normalizeConfidence(answer.confidence);
+            // If the question direction is the right-hand trait (e.g. 'I'), 
+            // invert the weight relative to the left-hand trait (e.g. 'E').
+            totalWeight += (answer.direction === right) ? (1 - weight) : weight;
+        }
+
+        const average = totalWeight / typeAnswers.length;
+        if (average >= 0.5) {
+            result.MBTI_Scores[left] = (average * 100).toFixed(1) + "%";
+            result.MBTI_String += left;
+        } else {
+            result.MBTI_Scores[right] = ((1 - average) * 100).toFixed(1) + "%";
+            result.MBTI_String += right;
+        }
+    }
+    return result;
+}
+
+// 3. UI Rendering
+const container = document.getElementById('quiz-container');
+questions.forEach((q, index) => {
+    container.innerHTML += `
+        <div class="question-card">
+            <p><strong>Q${index+1}:</strong> ${q.question}</p>
+            <select id="q-${index}" data-type="${q.question_type}" data-dir="${q.direction}">
+                <option value="0">0 - လုံးဝမဟုတ်ပါ (Strongly Disagree)</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3" selected>3 - အလယ်အလတ် (Neutral)</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6 - အလွန်မှန်ကန်သည် (Strongly Agree)</option>
+            </select>
+        </div>
+    `;
+});
+
+function handleCalculate() {
+    const userAnswers = questions.map((q, index) => {
+        const el = document.getElementById(`q-${index}`);
+        return {
+            question_type: el.dataset.type,
+            direction: el.dataset.dir,
+            confidence: parseInt(el.value)
+        };
+    });
+
+    const result = calculateMBTI(userAnswers);
+    
+    document.getElementById('result').style.display = 'block';
+    document.getElementById('mbti-string').innerText = result.MBTI_String;
+    document.getElementById('mbti-details').innerText = JSON.stringify(result.MBTI_Scores, null, 2);
+    window.scrollTo(0, document.body.scrollHeight);
+}
+</script>
+</body>
+</html>

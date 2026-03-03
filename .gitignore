@@ -1,0 +1,10 @@
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore dependencies
+node_modules/
+venv/
+
+# Ignore sensitive secrets
+.env
