@@ -271,7 +271,7 @@ const mbtiDescriptions = {
  */
 router.get("/questions", (req, res) => {
     try {
-        const data = Filesystem.readFileSync('data/without_bias_questions.json');
+        const data = Filesystem.readFileSync('data/depth_simple_combination.json');
         const questions = JSON.parse(data);
 
         // Ensure every question has a stable question_id field
